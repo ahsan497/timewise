@@ -429,6 +429,7 @@ Educational references, articles, and reviews are welcome with proper attributio
 [LinkedIn](https://www.linkedin.com/in/ahsan-tariq528/) • 
 [Email](mailto:ahsantariq497@gmail.com)
 
-© 2026 [Ahsan Tariq]. All rights reserved.
+© 2026 Ahsan Tariq. All rights reserved.
 
 </div>
+
