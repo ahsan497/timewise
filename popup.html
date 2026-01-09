@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      width: 420px;
+      max-height: 600px;
+      padding: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      color: #333;
+      background: #f8f9fa;
+      overflow-y: auto;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    h1 {
+      font-size: 20px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    
+    .settings-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      color: #666;
+      padding: 4px;
+    }
+    
+    .settings-btn:hover {
+      color: #333;
+    }
+    
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    
+    .time-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .time-item:last-child {
+      border-bottom: none;
+    }
+    
+    .time-item-left {
+      flex: 1;
+      overflow: hidden;
+      margin-right: 12px;
+    }
+    
+    .domain {
+      font-weight: 500;
+      color: #2c3e50;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .last-visit {
+      font-size: 11px;
+      color: #999;
+      margin-top: 2px;
+    }
+    
+    .time {
+      color: #5a67d8;
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    
+    .time.active {
+      color: #10b981;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    
+    .note-input {
+      width: 100%;
+      min-height: 70px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    
+    .note-input:focus {
+      outline: none;
+      border-color: #5a67d8;
+    }
+    
+    .btn {
+      background: #5a67d8;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    
+    .btn:hover {
+      background: #4c51bf;
+    }
+    
+    .btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+    
+    .btn-danger {
+      background: #ef4444;
+    }
+    
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+    
+    .current-site {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+      font-style: italic;
+    }
+    
+    .toggle-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+    }
+    
+    .toggle-label {
+      font-size: 13px;
+      color: #555;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+    
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .slider {
+      background-color: #5a67d8;
+    }
+    
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+    
+    .empty-state {
+      text-align: center;
+      color: #888;
+      padding: 20px;
+      font-size: 13px;
+    }
+    
+    .note-saved {
+      color: #10b981;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+    
+    .note-scope {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .scope-btn {
+      flex: 1;
+      padding: 6px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    
+    .scope-btn.active {
+      background: #5a67d8;
+      color: white;
+      border-color: #5a67d8;
+    }
+    
+    .view-all-link {
+      text-align: center;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #f0f0f0;
+    }
+    
+    .view-all-link a {
+      color: #5a67d8;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .view-all-link a:hover {
+      text-decoration: underline;
+    }
+    
+    /* Notes History Styles */
+    .notes-history {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 12px;
+      border-top: 1px solid #f0f0f0;
+      padding-top: 8px;
+    }
+    
+    .note-item {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    
+    .note-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .note-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    
+    .note-timestamp {
+      font-size: 11px;
+      color: #999;
+    }
+    
+    .note-actions {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .note-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 4px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    
+    .note-action-btn:hover {
+      opacity: 1;
+    }
+    
+    .note-text {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    
+    .note-count {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 4px;
+    }
+    
+    .notes-empty {
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      padding: 16px;
+      font-style: italic;
+    }
+    
+    .help-text {
+      font-size: 11px;
+      color: #888;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>⏱️ TimeWise</h1>
+    <button class="settings-btn" id="settingsBtn" title="Settings">⚙️</button>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">Recent Activity (Last 10)</div>
+    <div id="timeList"></div>
+    <div class="view-all-link">
+      <a href="#" id="viewHistoryLink">View Full History →</a>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title">Current Site</div>
+    <div class="current-site" id="currentSite">Loading...</div>
+    
+    <div id="trackingControls" style="display: flex; gap: 8px; margin-bottom: 12px;">
+      <button class="btn btn-sm" id="trackBtn" style="flex: 1; display: none;">
+        ▶️ Start Tracking
+      </button>
+      <button class="btn btn-sm btn-danger" id="untrackBtn" style="flex: 1; display: none;">
+        ⏸️ Stop Tracking
+      </button>
+      <button class="btn btn-sm btn-danger" id="deleteTodayBtn" style="flex: 1; display: none;">
+        🗑️ Delete Today's Data
+      </button>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="section-title" id="notesSectionTitle">Add Note to This Site</div>
+    <div class="note-scope">
+      <button class="scope-btn active" data-scope="domain">This Domain</button>
+      <button class="scope-btn" data-scope="url">This Exact URL</button>
+    </div>
+    
+    <textarea 
+      class="note-input" 
+      id="noteInput" 
+      placeholder="Add a new note..."></textarea>
+    <button class="btn" id="saveNoteBtn">Add Note</button>
+    <div class="note-saved" id="noteSaved">✓ Note added!</div>
+    
+    <div class="notes-history" id="notesHistory">
+      <div class="notes-empty">No notes yet for this site</div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <div class="toggle-container">
+      <div class="toggle-label">Show Note Indicator on This Page</div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="indicatorToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <p class="help-text">
+      Hide the floating note icon if you need full screen on this site
+    </p>
+  </div>
+  
+  <div class="section">
+    <div class="toggle-container">
+      <div class="toggle-label">Friendly Reminders</div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="remindersToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

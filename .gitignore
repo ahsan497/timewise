@@ -1,0 +1,38 @@
+cat > .gitignore << 'EOF'
+# Development files
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.swo
+*~
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+
+# OS files
+desktop.ini
+
+# Build files
+dist/
+build/
+
+# Don't commit submission guides
+SUBMISSION_CHECKLIST.md
+PRODUCTION_BUILD.md
+QUICK_START.md
+GITHUB_SETUP_GUIDE.md
+
+# Test files
+test/
+tests/
+*.test.js
+EOF
