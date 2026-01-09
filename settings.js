@@ -1,5 +1,5 @@
 // ========================================
-// TimeWise Settings Page Logic - ENHANCED
+// TimeWise Settings Page Logic - FIXED CSP COMPLIANCE
 // ========================================
 
 function formatTime(seconds) {
@@ -48,7 +48,7 @@ async function loadLimits() {
         `)
         .join('');
       
-      // Add remove handlers
+      // Add remove handlers - FIXED: Use event listeners instead of inline handlers
       limitList.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', () => removeLimit(btn.dataset.domain));
       });
@@ -244,6 +244,7 @@ async function loadHistory() {
       return b.seconds - a.seconds;
     });
     
+    // FIXED: Remove inline onclick handlers, use data attributes and event delegation
     historyBody.innerHTML = rows
       .map(row => `
         <tr>
@@ -251,13 +252,20 @@ async function loadHistory() {
           <td>${row.date}<br><small style="color: #999;">Started: ${row.startTime}</small></td>
           <td>${formatTime(row.seconds)}</td>
           <td>
-            <button class="btn btn-sm btn-danger" onclick="deleteHistoryEntry('${row.domain}', '${row.date}')" style="font-size: 11px; padding: 4px 8px;">
+            <button class="btn btn-sm btn-danger delete-history-btn" data-domain="${row.domain}" data-date="${row.date}" style="font-size: 11px; padding: 4px 8px;">
               Delete
             </button>
           </td>
         </tr>
       `)
       .join('');
+    
+    // FIXED: Add event listeners to delete buttons
+    historyBody.querySelectorAll('.delete-history-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        deleteHistoryEntry(btn.dataset.domain, btn.dataset.date);
+      });
+    });
     
   } catch (error) {
     console.error('Error loading history:', error);
@@ -297,9 +305,6 @@ async function deleteHistoryEntry(domain, date) {
     alert('Failed to delete entry');
   }
 }
-
-// Make function global for onclick
-window.deleteHistoryEntry = deleteHistoryEntry;
 
 // ===== DATA MANAGEMENT =====
 
