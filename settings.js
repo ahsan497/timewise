@@ -1,5 +1,5 @@
 // ========================================
-// TimeWise Settings Page Logic - FIXED CSP COMPLIANCE
+// TimeWise Settings Page Logic - FIXED
 // ========================================
 
 function formatTime(seconds) {
@@ -48,7 +48,7 @@ async function loadLimits() {
         `)
         .join('');
       
-      // Add remove handlers - FIXED: Use event listeners instead of inline handlers
+      // Add remove handlers
       limitList.querySelectorAll('.remove-btn').forEach(btn => {
         btn.addEventListener('click', () => removeLimit(btn.dataset.domain));
       });
@@ -59,6 +59,9 @@ async function loadLimits() {
     if (goalMinutes > 0) {
       document.getElementById('dailyGoalMinutes').value = goalMinutes;
       await updateGoalStatus();
+    } else {
+      document.getElementById('dailyGoalMinutes').value = '';
+      document.getElementById('goalStatus').innerHTML = '<em>No goal set</em>';
     }
     
   } catch (error) {
@@ -90,9 +93,13 @@ async function updateGoalStatus() {
     const percentage = Math.min(100, Math.round((totalMinutes / goalMinutes) * 100));
     
     const statusEl = document.getElementById('goalStatus');
+    
+    // FIXED: Show proper percentage even if exceeded
+    const displayPercentage = Math.round((totalMinutes / goalMinutes) * 100);
+    
     statusEl.innerHTML = `
       <div style="margin-bottom: 8px;">
-        <strong>Today's Progress:</strong> ${totalMinutes} / ${goalMinutes} minutes (${percentage}%)
+        <strong>Today's Progress:</strong> ${totalMinutes} / ${goalMinutes} minutes (${displayPercentage}%)
       </div>
       <div style="height: 20px; background: #e0e0e0; border-radius: 10px; overflow: hidden;">
         <div style="height: 100%; background: ${percentage >= 100 ? '#10b981' : '#5a67d8'}; width: ${percentage}%; transition: width 0.3s;"></div>
@@ -105,11 +112,31 @@ async function updateGoalStatus() {
 }
 
 async function setDailyGoal() {
-  const goalMinutes = parseInt(document.getElementById('dailyGoalMinutes').value);
+  const goalInput = document.getElementById('dailyGoalMinutes');
+  const goalMinutes = parseInt(goalInput.value);
   
+  // FIXED: Allow removing goal by clearing input or setting to 0
   if (!goalMinutes || goalMinutes < 1) {
-    alert('Please enter a valid goal (minimum 1 minute)');
-    return;
+    if (goalInput.value === '') {
+      // User wants to remove goal
+      if (confirm('Remove daily goal?')) {
+        try {
+          const { settings = {} } = await chrome.storage.local.get('settings');
+          settings.dailyGoal = 0;
+          await chrome.storage.local.set({ settings });
+          
+          document.getElementById('goalStatus').innerHTML = '<em>No goal set</em>';
+          showSuccess();
+        } catch (error) {
+          console.error('Error removing goal:', error);
+          alert('Failed to remove goal');
+        }
+      }
+      return;
+    } else {
+      alert('Please enter a valid goal (minimum 1 minute)');
+      return;
+    }
   }
   
   try {
@@ -244,7 +271,6 @@ async function loadHistory() {
       return b.seconds - a.seconds;
     });
     
-    // FIXED: Remove inline onclick handlers, use data attributes and event delegation
     historyBody.innerHTML = rows
       .map(row => `
         <tr>
@@ -260,7 +286,7 @@ async function loadHistory() {
       `)
       .join('');
     
-    // FIXED: Add event listeners to delete buttons
+    // Add event listeners to delete buttons
     historyBody.querySelectorAll('.delete-history-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         deleteHistoryEntry(btn.dataset.domain, btn.dataset.date);

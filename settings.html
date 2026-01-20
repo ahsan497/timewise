@@ -168,10 +168,18 @@
       flex: 1;
     }
     
+    /* FIXED: Add scrollable container for history table */
+    .history-table-container {
+      max-height: 500px;
+      overflow-y: auto;
+      margin-top: 16px;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+    }
+    
     .history-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 16px;
     }
     
     .history-table th,
@@ -187,10 +195,17 @@
       font-size: 13px;
       color: #666;
       text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
     
     .history-table td {
       font-size: 14px;
+    }
+    
+    .history-table tbody tr:last-child td {
+      border-bottom: none;
     }
     
     .success-message {
@@ -257,7 +272,7 @@
         <p style="font-size: 13px; color: #666; margin-bottom: 12px;">
           Set a daily goal for total productive time across all sites
         </p>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
           <input 
             type="number" 
             id="dailyGoalMinutes" 
@@ -269,6 +284,9 @@
           <span style="color: #666;">minutes per day</span>
           <button class="btn btn-sm" id="setGoalBtn">Set Goal</button>
         </div>
+        <p style="font-size: 11px; color: #888; margin-top: 8px; font-style: italic;">
+          💡 Tip: Clear the input and click "Set Goal" to remove your goal
+        </p>
         <div id="goalStatus" style="margin-top: 12px; font-size: 13px; color: #666;"></div>
       </div>
     </div>
@@ -289,21 +307,23 @@
         <button class="btn" id="loadHistoryBtn">Load History</button>
       </div>
       
-      <table class="history-table">
-        <thead>
-          <tr>
-            <th>Website</th>
-            <th>Date & Time</th>
-            <th>Time Spent</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="historyBody">
-          <tr>
-            <td colspan="4" class="empty-state">Select a date range to view history</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="history-table-container">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Website</th>
+              <th>Date & Time</th>
+              <th>Time Spent</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody">
+            <tr>
+              <td colspan="4" class="empty-state">Select a date range to view history</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
     
     <!-- Data Management Section -->

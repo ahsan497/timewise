@@ -8,6 +8,8 @@ let currentDomain = null;
 let currentUrl = null;
 let noteScope = 'domain';
 let outsideClickHandler = null;
+let isExtensionValid = true;
+let observer = null;
 
 // ===== UTILITY FUNCTIONS =====
 
@@ -22,6 +24,50 @@ function getDomain(url) {
 
 function getNoteKey() {
   return noteScope === 'domain' ? currentDomain : currentUrl;
+}
+
+// Check if extension context is still valid
+function checkExtensionContext() {
+  if (!isExtensionValid) return false;
+  
+  try {
+    // Check if chrome.runtime exists and has an id
+    if (!chrome.runtime?.id) {
+      isExtensionValid = false;
+      cleanup();
+      return false;
+    }
+    return true;
+  } catch (error) {
+    // Any error here means extension context is invalid
+    isExtensionValid = false;
+    cleanup();
+    return false;
+  }
+}
+
+// Centralized cleanup function
+function cleanup() {
+  // Only log once
+  if (isExtensionValid) {
+    console.log('TimeWise: Extension context invalidated, cleaning up...');
+  }
+  
+  // Remove UI elements
+  removeNoteIndicator();
+  
+  // Disconnect observer
+  if (observer) {
+    try {
+      observer.disconnect();
+    } catch (e) {
+      // Silently fail if already disconnected
+    }
+    observer = null;
+  }
+  
+  // Mark as invalid
+  isExtensionValid = false;
 }
 
 // ===== NOTE INDICATOR UI =====
@@ -167,13 +213,21 @@ function createNoteIndicator() {
 
 function removeNoteIndicator() {
   if (noteIndicator) {
-    noteIndicator.remove();
+    try {
+      noteIndicator.remove();
+    } catch (e) {
+      // Silently handle if element is already removed
+    }
     noteIndicator = null;
   }
   
   // Clean up the outside click handler
   if (outsideClickHandler) {
-    document.removeEventListener('click', outsideClickHandler);
+    try {
+      document.removeEventListener('click', outsideClickHandler);
+    } catch (e) {
+      // Silently handle cleanup errors
+    }
     outsideClickHandler = null;
   }
 }
@@ -182,6 +236,7 @@ function updateNoteDisplay(notes) {
   if (!noteIndicator) return;
   
   const noteTextElement = noteIndicator.querySelector('#timewise-note-text');
+  if (!noteTextElement) return;
   
   // Handle both old format (single note object) and new format (array of notes)
   if (!notes || (Array.isArray(notes) && notes.length === 0)) {
@@ -209,13 +264,36 @@ function updateNoteDisplay(notes) {
 // ===== CHECK FOR NOTES =====
 
 async function checkForNote() {
+  // Check if extension context is valid before proceeding
+  if (!checkExtensionContext()) {
+    return;
+  }
+  
   try {
     currentDomain = getDomain(window.location.href);
     currentUrl = window.location.href;
     
     if (!currentDomain) return;
     
-    const { notes = {}, settings = {} } = await chrome.storage.local.get(['notes', 'settings']);
+    // Wrap storage call in try-catch for extension context errors
+    let notes = {};
+    let settings = {};
+    
+    try {
+      const result = await chrome.storage.local.get(['notes', 'settings']);
+      notes = result.notes || {};
+      settings = result.settings || {};
+    } catch (storageError) {
+      // Storage access failed - extension context likely invalidated
+      const errorMsg = storageError?.message || '';
+      if (errorMsg.includes('Extension context invalidated') ||
+          errorMsg.includes('message port closed') ||
+          errorMsg.includes('receiving end does not exist')) {
+        cleanup();
+        return;
+      }
+      throw storageError;
+    }
     
     noteScope = settings.noteScope || 'domain';
     const noteKey = getNoteKey();
@@ -235,38 +313,110 @@ async function checkForNote() {
     }
     
   } catch (error) {
-    console.error('TimeWise: Error checking for note:', error);
+    // Check if error is due to invalid extension context
+    const errorMsg = error?.message || '';
+    if (errorMsg.includes('Extension context invalidated') ||
+        errorMsg.includes('message port closed') ||
+        errorMsg.includes('runtime.lastError') ||
+        errorMsg.includes('receiving end does not exist')) {
+      // Silent cleanup - this is expected when extension reloads
+      cleanup();
+    } else {
+      // Only log unexpected errors
+      console.error('TimeWise: Unexpected error checking for note:', error);
+    }
   }
 }
 
 // ===== MESSAGE LISTENER =====
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'noteUpdated') {
-    if (request.hasNote) {
-      checkForNote();
-    } else {
-      removeNoteIndicator();
-    }
+// Wrap message listener to handle extension context errors
+function setupMessageListener() {
+  if (!checkExtensionContext()) {
+    return;
   }
-  return true;
-});
+  
+  try {
+    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+      // Check extension context before handling messages
+      if (!checkExtensionContext()) {
+        return false;
+      }
+      
+      try {
+        if (request.action === 'noteUpdated') {
+          if (request.hasNote) {
+            checkForNote();
+          } else {
+            removeNoteIndicator();
+          }
+        }
+      } catch (error) {
+        cleanup();
+      }
+      
+      return true;
+    });
+  } catch (error) {
+    // Extension context already invalid
+    cleanup();
+  }
+}
 
 // ===== INITIALIZATION =====
 
-// Check for notes on page load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', checkForNote);
-} else {
+function initialize() {
+  if (!checkExtensionContext()) {
+    return;
+  }
+  
+  // Setup message listener
+  setupMessageListener();
+  
+  // Check for notes on page load
   checkForNote();
+  
+  // Re-check on URL changes (for SPAs) - with extension context validation
+  let lastUrl = location.href;
+
+  try {
+    observer = new MutationObserver(() => {
+      // Stop observing if extension context is invalid
+      if (!checkExtensionContext()) {
+        if (observer) {
+          observer.disconnect();
+          observer = null;
+        }
+        return;
+      }
+      
+      try {
+        const url = location.href;
+        if (url !== lastUrl) {
+          lastUrl = url;
+          checkForNote();
+        }
+      } catch (error) {
+        // Handle any errors during observation
+        cleanup();
+      }
+    });
+
+    observer.observe(document, { subtree: true, childList: true });
+  } catch (error) {
+    // Observer creation failed - extension context likely invalid
+    cleanup();
+  }
 }
 
-// Re-check on URL changes (for SPAs)
-let lastUrl = location.href;
-new MutationObserver(() => {
-  const url = location.href;
-  if (url !== lastUrl) {
-    lastUrl = url;
-    checkForNote();
-  }
-}).observe(document, { subtree: true, childList: true });
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initialize);
+} else {
+  initialize();
+}
+
+// Clean up when page unloads
+window.addEventListener('beforeunload', () => {
+  cleanup();
+});

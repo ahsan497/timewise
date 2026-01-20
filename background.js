@@ -11,6 +11,8 @@ let currentSession = {
   isActive: false
 };
 
+let dailyGoalNotified = false; // Track if daily goal notification sent today
+
 // ===== UTILITY FUNCTIONS =====
 
 // Extract clean domain from URL - ENHANCED with better filtering
@@ -97,8 +99,11 @@ async function saveCurrentSession() {
       lastVisits: recentVisits
     });
     
-    // Check if reminder needed - FIXED: pass correct total
-    await checkReminder(currentSession.domain, timeData[currentSession.domain][dateKey]);
+    // Check if site-specific reminder needed
+    await checkSiteReminder(currentSession.domain, timeData[currentSession.domain][dateKey]);
+    
+    // Check if daily goal reminder needed
+    await checkDailyGoalReminder(timeData, dateKey);
     
   } catch (error) {
     console.error('Error saving session:', error);
@@ -179,9 +184,9 @@ async function stopSession() {
   };
 }
 
-// ===== REMINDER SYSTEM - FIXED =====
+// ===== REMINDER SYSTEM - FIXED WITH PROFESSIONAL NOTIFICATIONS =====
 
-async function checkReminder(domain, totalSeconds) {
+async function checkSiteReminder(domain, totalSeconds) {
   try {
     const { settings = {} } = await chrome.storage.local.get('settings');
     
@@ -196,32 +201,105 @@ async function checkReminder(domain, totalSeconds) {
     
     const limitSeconds = limitMinutes * 60;
     
-    // Check if we just crossed the threshold (within last 5 seconds for better accuracy)
-    if (totalSeconds >= limitSeconds && totalSeconds < limitSeconds + 5) {
+    // Check if we just crossed the threshold (within last 10 seconds for better accuracy)
+    if (totalSeconds >= limitSeconds && totalSeconds < limitSeconds + 10) {
       // Check if we already notified today
       const { lastNotifications = {} } = await chrome.storage.local.get('lastNotifications');
       const today = getDateKey();
       
       if (lastNotifications[domain] === today) return;
       
-      // Show notification
+      // FIXED: Professional notification with better messaging
+      const hours = Math.floor(limitMinutes / 60);
+      const mins = limitMinutes % 60;
+      let timeStr = '';
+      
+      if (hours > 0 && mins > 0) {
+        timeStr = `${hours} hour${hours > 1 ? 's' : ''} and ${mins} minute${mins > 1 ? 's' : ''}`;
+      } else if (hours > 0) {
+        timeStr = `${hours} hour${hours > 1 ? 's' : ''}`;
+      } else {
+        timeStr = `${mins} minute${mins > 1 ? 's' : ''}`;
+      }
+      
       chrome.notifications.create(`reminder-${domain}-${Date.now()}`, {
         type: 'basic',
         iconUrl: 'icons/icon128.png',
-        title: 'TimeWise Friendly Reminder ⏰',
-        message: `You've spent ${limitMinutes} minute${limitMinutes > 1 ? 's' : ''} on ${domain} today`,
+        title: '⏰ TimeWise Reminder',
+        message: `You've reached your ${timeStr} goal on ${domain} today. Great work staying mindful of your time!`,
         priority: 2,
-        requireInteraction: false
+        requireInteraction: false,
+        silent: false
       });
       
       // Mark as notified
       lastNotifications[domain] = today;
       await chrome.storage.local.set({ lastNotifications });
       
-      console.log(`Reminder sent for ${domain}: ${limitMinutes} minutes`);
+      console.log(`Site reminder sent for ${domain}: ${timeStr}`);
     }
   } catch (error) {
-    console.error('Error checking reminder:', error);
+    console.error('Error checking site reminder:', error);
+  }
+}
+
+async function checkDailyGoalReminder(timeData, dateKey) {
+  try {
+    const { settings = {} } = await chrome.storage.local.get('settings');
+    
+    // Check if reminders are enabled and daily goal is set
+    if (!settings.remindersEnabled || !settings.dailyGoal) return;
+    
+    const goalMinutes = settings.dailyGoal;
+    const goalSeconds = goalMinutes * 60;
+    
+    // Calculate total time today
+    let totalSeconds = 0;
+    for (const domain in timeData) {
+      if (timeData[domain][dateKey]) {
+        totalSeconds += timeData[domain][dateKey];
+      }
+    }
+    
+    // Check if we just reached the goal (within last 10 seconds)
+    if (totalSeconds >= goalSeconds && totalSeconds < goalSeconds + 10) {
+      // Check if we already notified today
+      const { dailyGoalNotifications = {} } = await chrome.storage.local.get('dailyGoalNotifications');
+      const today = getDateKey();
+      
+      if (dailyGoalNotifications[today]) return;
+      
+      // FIXED: Professional daily goal achievement notification
+      const hours = Math.floor(goalMinutes / 60);
+      const mins = goalMinutes % 60;
+      let timeStr = '';
+      
+      if (hours > 0 && mins > 0) {
+        timeStr = `${hours} hour${hours > 1 ? 's' : ''} and ${mins} minute${mins > 1 ? 's' : ''}`;
+      } else if (hours > 0) {
+        timeStr = `${hours} hour${hours > 1 ? 's' : ''}`;
+      } else {
+        timeStr = `${mins} minute${mins > 1 ? 's' : ''}`;
+      }
+      
+      chrome.notifications.create(`daily-goal-${Date.now()}`, {
+        type: 'basic',
+        iconUrl: 'icons/icon128.png',
+        title: '🎉 Daily Goal Achieved!',
+        message: `Congratulations! You've completed your ${timeStr} productivity goal for today. Keep up the great work!`,
+        priority: 2,
+        requireInteraction: false,
+        silent: false
+      });
+      
+      // Mark as notified
+      dailyGoalNotifications[today] = true;
+      await chrome.storage.local.set({ dailyGoalNotifications });
+      
+      console.log(`Daily goal achieved notification sent: ${timeStr}`);
+    }
+  } catch (error) {
+    console.error('Error checking daily goal reminder:', error);
   }
 }
 
@@ -293,6 +371,7 @@ chrome.windows.onFocusChanged.addListener(async (windowId) => {
 chrome.alarms.create('quickSave', { periodInMinutes: 0.0833 }); // ~5 seconds
 chrome.alarms.create('periodicSave', { periodInMinutes: 1 }); // 1 minute backup
 chrome.alarms.create('weeklyCleanup', { periodInMinutes: 10080 }); // 7 days
+chrome.alarms.create('dailyReset', { periodInMinutes: 1440 }); // 24 hours
 
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === 'quickSave' || alarm.name === 'periodicSave') {
@@ -303,6 +382,9 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
     }
   } else if (alarm.name === 'weeklyCleanup') {
     await cleanupOldData();
+  } else if (alarm.name === 'dailyReset') {
+    // Reset daily goal notification flag at midnight
+    dailyGoalNotified = false;
   }
 });
 
