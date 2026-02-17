@@ -199,7 +199,7 @@ graph LR
 - ❌ Browsing history details
 - ❌ Any identifiable information
 
-**[📄 Read Full Privacy Policy](https://ahsan497.github.io/timewise/PRIVACY_POLICY)**
+**[📄 Read Full Privacy Policy](https://github.com/ahsan497/timewise/blob/main/PRIVACY_POLICY.md)**
 
 ---
 
