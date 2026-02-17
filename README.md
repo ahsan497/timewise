@@ -6,12 +6,12 @@
 
 **Track your focus time and save smart notes—privately in your browser.**
 
-[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=google-chrome)](link-here)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome-Web%20Store-blue?logo=google-chrome)](https://chromewebstore.google.com/detail/timewise-focus-time-track/jijhbikhpeeilnpchfpelbfhbnhjconj)
 [![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](https://github.com/ahsan497/timewise/releases)
 [![License](https://img.shields.io/badge/license-Source%20Available-orange.svg)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/ahsan497/timewise?style=social)](https://github.com/ahsan497/timewise)
 
-[**Install from Chrome Web Store**](link-here) • [**Report Bug**](https://github.com/ahsan497/timewise/issues) • [**Request Feature**](https://github.com/ahsan497/timewise/issues)
+[**⬇️ Install from Chrome Web Store**](https://chromewebstore.google.com/detail/timewise-focus-time-track/jijhbikhpeeilnpchfpelbfhbnhjconj) • [**Report Bug**](https://github.com/ahsan497/timewise/issues) • [**Request Feature**](https://github.com/ahsan497/timewise/issues)
 
 </div>
 
@@ -93,6 +93,16 @@ We believe in **transparency without compromising control**:
 
 </div>
 
+> 📁 **To add your screenshots:** Place your image files in the `screenshots/` folder at the root of the repo and name them `dashboard.png`, `notes.png`, and `settings.png`. They will automatically appear in the table above. You can also add extra screenshots below:
+
+<div align="center">
+
+<!-- Add any additional screenshots here, for example: -->
+<!-- ![Feature Name](screenshots/your-screenshot.png) -->
+<!-- *Caption for your screenshot* -->
+
+</div>
+
 ---
 
 ## 🚀 Installation
@@ -101,7 +111,7 @@ We believe in **transparency without compromising control**:
 
 <div align="center">
 
-**[⬇️ Install TimeWise from Chrome Web Store](link-here)**
+**[⬇️ Install TimeWise from Chrome Web Store](https://chromewebstore.google.com/detail/timewise-focus-time-track/jijhbikhpeeilnpchfpelbfhbnhjconj)**
 
 *Automatic updates • Verified by Google • Secure installation*
 
@@ -328,7 +338,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 [💬 GitHub Discussions](https://github.com/ahsan497/timewise/discussions) • 
 [📧 Email Support](mailto:ahsantariq497@gmail.com) • 
-[ LinkedIn](https://www.linkedin.com/in/ahsan-tariq528/)
+[💼 LinkedIn](https://www.linkedin.com/in/ahsan-tariq528/)
 
 **Average Response Time: 24-48 hours**
 
@@ -367,8 +377,8 @@ If you find TimeWise useful:
 <div align="center">
 
 ⭐ **Star this repository**  
-✍️ **[Write a review on Chrome Web Store](link-here)**  
-🐦 **[Share on Twitter](https://twitter.com/intent/tweet?text=Check%20out%20TimeWise)**  
+✍️ **[Write a review on Chrome Web Store](https://chromewebstore.google.com/detail/timewise-focus-time-track/jijhbikhpeeilnpchfpelbfhbnhjconj)**  
+🐦 **[Share on Twitter](https://twitter.com/intent/tweet?text=Check%20out%20TimeWise%20-%20a%20free%2C%20private%20focus%20time%20tracker%20for%20Chrome!%20https%3A%2F%2Fchromewebstore.google.com%2Fdetail%2Ftimewise-focus-time-track%2Fjijhbikhpeeilnpchfpelbfhbnhjconj)**  
 📧 **Tell your friends**
 
 **Thank you for your support! 🙏**
@@ -426,10 +436,9 @@ Educational references, articles, and reviews are welcome with proper attributio
 
 **Made with ❤️ for privacy-conscious productivity enthusiasts**
 
-[LinkedIn](https://www.linkedin.com/in/ahsan-tariq528/) • 
-[Email](mailto:ahsantariq497@gmail.com)
+[💼 LinkedIn](https://www.linkedin.com/in/ahsan-tariq528/) • 
+[📧 Email](mailto:ahsantariq497@gmail.com)
 
 © 2026 Ahsan Tariq. All rights reserved.
 
 </div>
-
